@@ -1,6 +1,8 @@
-FROM php:5.6-fpm
+FROM php:5.4-fpm
 ARG TIMEZONE=UTC
 ARG XDEBUG_REMOTE_HOST=host.docker.internal
+
+RUN echo "deb http://httpredir.debian.org/debian jessie main" > /etc/apt/sources.list
 
 RUN apt-get update && apt-get install -y \
     openssh-client \
@@ -33,15 +35,15 @@ RUN "date"
 
 # Type docker-php-ext-install to see available extensions
 RUN docker-php-ext-install pdo pdo_mysql mysqli
-RUN docker-php-ext-install -j$(nproc) iconv mcrypt mbstring exif zip opcache pcntl \
-    && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
-    && docker-php-ext-install -j$(nproc) gd \
+RUN docker-php-ext-install iconv mcrypt mbstring exif zip pcntl
+RUN docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
+    && docker-php-ext-install gd \
     && docker-php-ext-configure intl \
     && docker-php-ext-install intl
 
 
 # install xdebug
-RUN pecl install xdebug-2.5.5
+RUN pecl install xdebug-2.4.1
 RUN docker-php-ext-enable xdebug
 RUN echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
 RUN echo "display_startup_errors=On" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
@@ -61,15 +63,6 @@ RUN curl -sL https://deb.nodesource.com/setup_6.x | bash - \
     && echo "deb http://dl.yarnpkg.com/debian/ stable main" | tee /etc/apt/sources.list.d/yarn.list \
     && apt-get update && apt-get install -y yarn nodejs
 
-COPY php.ini /usr/local/etc/php/
-COPY bashrc.dist /var/www/.bashrc
-
-RUN ln -s /var/www/.host/composer /var/www/.composer
-RUN ln -s /var/www/.host/local /var/www/.local
-RUN ln -s /var/www/.host/.npmrc /var/www/.npmrc
-RUN ln -s /var/www/html/docker/data/.bash_history /var/www/.bash_history
-
 RUN chown -R www-data: /var/www
-
 
 WORKDIR /var/www/html/www

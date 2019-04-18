@@ -1,4 +1,4 @@
-FROM php:7.2-fpm
+FROM php:7.1-fpm
 ARG TIMEZONE=UTC
 ARG XDEBUG_REMOTE_HOST=host.docker.internal
 
@@ -23,6 +23,7 @@ RUN apt-get update && apt-get install -y \
 
 # Install Composer
 RUN curl -sS https://getcomposer.org/installer | php -- --install-dir=/usr/local/bin --filename=composer
+#RUN composer global require hirak/prestissimo
 RUN composer --version
 
 # Set timezone
@@ -31,14 +32,13 @@ RUN printf '[PHP]\ndate.timezone = "%s"\n', ${TIMEZONE} > /usr/local/etc/php/con
 RUN "date"
 
 # Type docker-php-ext-install to see available extensions
-RUN pecl install mcrypt-1.0.2
-RUN docker-php-ext-enable mcrypt
 RUN docker-php-ext-install pdo pdo_mysql
-RUN docker-php-ext-install -j$(nproc) iconv mbstring exif zip opcache pcntl \
+RUN docker-php-ext-install -j$(nproc) iconv mcrypt mbstring exif zip opcache pcntl \
     && docker-php-ext-configure gd --with-freetype-dir=/usr/include/ --with-jpeg-dir=/usr/include/ \
     && docker-php-ext-install -j$(nproc) gd \
     && docker-php-ext-configure intl \
     && docker-php-ext-install intl
+
 
 # install xdebug
 RUN pecl install xdebug
